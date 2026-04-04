@@ -1,3 +1,4 @@
+import { saveUser } from '@/auth/session';
 import { PasswordField } from '@/components/auth/PasswordField';
 import { SlotifyLogo } from '@/components/splash/SlotifyLogo';
 import { Brand } from '@/constants/brand';
@@ -45,7 +46,9 @@ export default function RegisterScreen() {
     void SystemUI.setBackgroundColorAsync(AppScreenBackground);
   }, []);
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    await saveUser({ email: normalizedEmail });
     router.replace('/(tabs)');
   };
 

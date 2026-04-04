@@ -1,5 +1,6 @@
+import { getUser } from '@/auth/session';
 import { SplashScreenView } from '@/screens/Splash';
-import { useRouter } from 'expo-router';
+import { type Href, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef } from 'react';
 
@@ -10,18 +11,39 @@ export default function SplashRoute() {
   const hidNative = useRef(false);
 
   useEffect(() => {
-    const hide = async () => {
-      if (hidNative.current) return;
-      hidNative.current = true;
-      await SplashScreen.hideAsync();
+    let cancelled = false;
+
+    const run = async () => {
+      const started = Date.now();
+      let storedUser: Awaited<ReturnType<typeof getUser>> = null;
+      try {
+        storedUser = await getUser();
+      } catch {
+        storedUser = null;
+      }
+      if (cancelled) return;
+
+      const elapsed = Date.now() - started;
+      const waitMore = Math.max(0, MAIN_DELAY_MS - elapsed);
+      if (waitMore > 0) {
+        await new Promise<void>((resolve) => setTimeout(resolve, waitMore));
+      }
+      if (cancelled) return;
+
+      if (!hidNative.current) {
+        hidNative.current = true;
+        await SplashScreen.hideAsync();
+      }
+
+      const next = (storedUser ? '/(tabs)' : '/welcome') as Href;
+      router.replace(next);
     };
-    void hide();
 
-    const t = setTimeout(() => {
-      router.replace('/welcome');
-    }, MAIN_DELAY_MS);
+    void run();
 
-    return () => clearTimeout(t);
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   return <SplashScreenView />;

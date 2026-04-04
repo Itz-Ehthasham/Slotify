@@ -43,6 +43,8 @@ export default function RootLayout() {
         <Stack.Screen name="register" options={{ contentStyle: { backgroundColor: AppScreenBackground } }} />
         <Stack.Screen name="onboarding" options={{ contentStyle: { backgroundColor: AppScreenBackground } }} />
         <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: AppScreenBackground } }} />
+        <Stack.Screen name="provider-list" options={{ contentStyle: { backgroundColor: AppScreenBackground } }} />
+        <Stack.Screen name="provider-detail" options={{ contentStyle: { backgroundColor: AppScreenBackground } }} />
         <Stack.Screen name="auth" options={{ headerShown: true, title: 'Auth' }} />
       </Stack>
       <StatusBar style="dark" />

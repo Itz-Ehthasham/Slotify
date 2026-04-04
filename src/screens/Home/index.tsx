@@ -1,7 +1,9 @@
+import { HomeSideMenu } from '@/components/home/HomeSideMenu';
 import { Brand } from '@/constants/brand';
 import { AppScreenBackground } from '@/constants/screen';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
+import { type Href, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
   type ImageSourcePropType,
@@ -46,7 +48,7 @@ const SERVICES: ServiceItem[] = [
   { key: '9', label: 'More', source: moreIcon },
 ];
 
-function HomeListHeader() {
+function HomeListHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
 
@@ -71,6 +73,7 @@ function HomeListHeader() {
           </View>
           <Pressable
             hitSlop={12}
+            onPress={onOpenMenu}
             style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
             accessibilityLabel="Open menu">
             <Ionicons name="menu-outline" size={28} color={Brand.charcoal} />
@@ -99,12 +102,24 @@ function HomeListHeader() {
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
   const { width: windowWidth } = useWindowDimensions();
 
   const cellSize = useMemo(() => {
     const inner = windowWidth - H_PADDING * 2 - GRID_GAP * 2;
     return inner / 3;
   }, [windowWidth]);
+
+  const openProviderList = useCallback(
+    (label: string) => {
+      router.push({
+        pathname: '/provider-list',
+        params: { service: label },
+      } as Href);
+    },
+    [router],
+  );
 
   const renderItem: ListRenderItem<ServiceItem> = useCallback(
     ({ item }) => (
@@ -114,6 +129,7 @@ export default function HomeScreen() {
           { width: cellSize, height: cellSize },
           pressed && styles.cardPressed,
         ]}
+        onPress={() => openProviderList(item.label)}
         accessibilityRole="button"
         accessibilityLabel={item.label}>
         <Image source={item.source} style={styles.cardIcon} contentFit="contain" />
@@ -122,7 +138,7 @@ export default function HomeScreen() {
         </Text>
       </Pressable>
     ),
-    [cellSize],
+    [cellSize, openProviderList],
   );
 
   return (
@@ -132,12 +148,13 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.key}
         numColumns={3}
         renderItem={renderItem}
-        ListHeaderComponent={HomeListHeader}
+        ListHeaderComponent={<HomeListHeader onOpenMenu={() => setMenuOpen(true)} />}
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       />
+      <HomeSideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
     </View>
   );
 }

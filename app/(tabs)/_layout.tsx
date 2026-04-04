@@ -9,8 +9,7 @@ import { Colors } from '@/constants/theme';
 const ICON = 26;
 
 const homeIcon = require('../../assets/icons/home.svg') as ImageSourcePropType;
-const ordersIcon = require('../../assets/icons/orders.svg') as ImageSourcePropType;
-const promotionsIcon = require('../../assets/icons/promotions.svg') as ImageSourcePropType;
+const appointmentsIcon = require('../../assets/icons/orders.svg') as ImageSourcePropType;
 const notificationsIcon = require('../../assets/icons/notifications.svg') as ImageSourcePropType;
 
 function TabIcon({ source, color }: { source: ImageSourcePropType; color: string }) {
@@ -50,20 +49,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="booking"
+        name="appointments"
         options={{
-          title: 'Orders',
+          title: 'Appointments',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon source={ordersIcon} color={focused ? Colors.light.tabBarIconTintActive : color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="provider"
-        options={{
-          title: 'Promotions',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon source={promotionsIcon} color={focused ? Colors.light.tabBarIconTintActive : color} />
+            <TabIcon
+              source={appointmentsIcon}
+              color={focused ? Colors.light.tabBarIconTintActive : color}
+            />
           ),
         }}
       />

@@ -1,27 +1,14 @@
+import { BookingCalendarModal } from '@/components/provider/BookingCalendarModal';
 import { ServiceWorkHero } from '@/components/provider/ServiceWorkHero';
 import { Brand } from '@/constants/brand';
 import { AppScreenBackground } from '@/constants/screen';
 import { formatHourlyRateInr, getProviderDetail } from '@/data/mockProviders';
-import {
-  appendBooking,
-  createBookingId,
-  getBookedTimesForProviderOnDate,
-  todayLocalIsoDate,
-} from '@/storage/bookingsStorage';
-import { useFocusEffect } from '@react-navigation/native';
+import { appendBooking, createBookingId } from '@/storage/bookingsStorage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function paramString(v: string | string[] | undefined): string | undefined {
@@ -48,57 +35,29 @@ export default function ProviderDetailScreen() {
 
   const detail = getProviderDetail(id || 'unknown', fallbackName, category);
   const providerId = id || 'unknown';
-  const bookingDate = todayLocalIsoDate();
 
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
-  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
-  const refreshBookedSlots = useCallback(async () => {
-    const taken = await getBookedTimesForProviderOnDate(providerId, bookingDate);
-    setBookedSlots(taken);
-    setSelectedSlot((current) => (current && taken.has(current) ? null : current));
-  }, [providerId, bookingDate]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void refreshBookedSlots();
-    }, [refreshBookedSlots]),
-  );
-
-  const onSelectSlot = (slot: string) => {
-    if (bookedSlots.has(slot)) return;
-    setSelectedSlot((prev) => (prev === slot ? null : slot));
-  };
-
-  const onBookAppointment = async () => {
-    if (!selectedSlot || bookingSubmitting) return;
-    const providerName = detail.name;
-    const cat = category ?? 'Service';
-    setBookingSubmitting(true);
-    try {
+  const confirmBooking = useCallback(
+    async (dateIso: string, time: string) => {
       await appendBooking({
         id: createBookingId(),
         providerId,
-        providerName,
-        category: cat,
-        time: selectedSlot,
-        date: bookingDate,
+        providerName: detail.name,
+        category: category ?? 'Service',
+        time,
+        date: dateIso,
       });
-      await refreshBookedSlots();
-      setSelectedSlot(null);
+      setBookingModalOpen(false);
       Alert.alert('Appointment Booked', 'Your slot has been reserved.', [
         {
           text: 'OK',
           onPress: () => router.replace('/(tabs)/appointments' as Href),
         },
       ]);
-    } catch {
-      Alert.alert('Booking failed', 'Could not save your appointment. Please try again.');
-    } finally {
-      setBookingSubmitting(false);
-    }
-  };
+    },
+    [providerId, detail.name, category, router],
+  );
 
   const workLabel = category ? `${category} service` : 'Service';
 
@@ -174,71 +133,25 @@ export default function ProviderDetailScreen() {
 
         <Text style={styles.description}>{detail.description}</Text>
 
-        <Text style={styles.sectionTitle}>Available slots</Text>
-        <Text style={styles.slotsHint}>
-          {new Date(bookingDate + 'T12:00:00').toLocaleDateString(undefined, {
-            weekday: 'long',
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-        </Text>
-        <View style={styles.slotsRow}>
-          {detail.slots.map((slot) => {
-            const booked = bookedSlots.has(slot);
-            const selected = selectedSlot === slot && !booked;
-            return (
-              <Pressable
-                key={slot}
-                onPress={() => onSelectSlot(slot)}
-                disabled={booked}
-                style={({ pressed }) => [
-                  styles.slotChip,
-                  booked && styles.slotChipBooked,
-                  selected && styles.slotChipSelected,
-                  !booked && !selected && pressed && styles.slotChipPressed,
-                ]}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: booked, selected }}
-                accessibilityLabel={booked ? `${slot}, booked` : `Select ${slot}`}>
-                <Text
-                  style={[
-                    styles.slotText,
-                    booked && styles.slotTextBooked,
-                    selected && styles.slotTextSelected,
-                  ]}>
-                  {slot}
-                </Text>
-                {booked ? <Text style={styles.slotBookedLabel}>Booked</Text> : null}
-              </Pressable>
-            );
-          })}
-        </View>
-
         <Pressable
-          onPress={() => void onBookAppointment()}
-          disabled={!selectedSlot || bookingSubmitting}
-          style={({ pressed }) => [
-            styles.bookBtn,
-            !selectedSlot && !bookingSubmitting && styles.bookBtnDisabled,
-            pressed && selectedSlot && !bookingSubmitting && styles.bookBtnPressed,
-          ]}
+          onPress={() => setBookingModalOpen(true)}
+          style={({ pressed }) => [styles.bookBtn, pressed && styles.bookBtnPressed]}
           accessibilityRole="button"
-          accessibilityLabel="Book appointment"
-          accessibilityState={{ disabled: !selectedSlot || bookingSubmitting }}>
-          {bookingSubmitting ? (
-            <ActivityIndicator color={Brand.logoLime} />
-          ) : (
-            <Text
-              style={[
-                styles.bookBtnText,
-                !selectedSlot && !bookingSubmitting && styles.bookBtnTextDisabled,
-              ]}>
-              Book Appointment
-            </Text>
-          )}
+          accessibilityLabel="Book appointment">
+          <Text style={styles.bookBtnText}>Book Appointment</Text>
         </Pressable>
       </ScrollView>
+
+      <BookingCalendarModal
+        visible={bookingModalOpen}
+        onClose={() => setBookingModalOpen(false)}
+        providerId={providerId}
+        providerName={detail.name}
+        category={category ?? 'Service'}
+        slots={detail.slots}
+        hourlyRate={detail.hourlyRate}
+        onConfirmBooking={confirmBooking}
+      />
     </SafeAreaView>
   );
 }
@@ -404,71 +317,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 28,
   },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 6,
-  },
-  slotsHint: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginBottom: 14,
-  },
-  slotsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  slotChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 15, 15, 0.12)',
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  slotChipSelected: {
-    backgroundColor: '#DCFCE7',
-    borderColor: 'rgba(22, 101, 52, 0.45)',
-    borderWidth: 2,
-    paddingVertical: 9,
-    paddingHorizontal: 15,
-  },
-  slotChipBooked: {
-    opacity: 0.55,
-    backgroundColor: '#F3F4F6',
-    borderColor: 'rgba(15, 15, 15, 0.08)',
-  },
-  slotChipPressed: {
-    opacity: 0.88,
-    backgroundColor: '#F3F4F6',
-  },
-  slotText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  slotTextSelected: {
-    color: '#166534',
-  },
-  slotTextBooked: {
-    textDecorationLine: 'line-through',
-    color: '#6B7280',
-  },
-  slotBookedLabel: {
-    marginTop: 4,
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#9CA3AF',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
   bookBtn: {
-    marginTop: 24,
+    marginTop: 80,
     width: '100%',
     alignSelf: 'stretch',
     backgroundColor: '#000000',
@@ -482,18 +332,10 @@ const styles = StyleSheet.create({
   bookBtnPressed: {
     opacity: 0.92,
   },
-  bookBtnDisabled: {
-    backgroundColor: '#E5E7EB',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 15, 15, 0.08)',
-  },
   bookBtnText: {
     fontSize: 16,
     fontWeight: '600',
     color: Brand.logoLime,
     letterSpacing: 0.1,
-  },
-  bookBtnTextDisabled: {
-    color: '#6B7280',
   },
 });

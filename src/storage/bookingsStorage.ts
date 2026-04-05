@@ -6,6 +6,7 @@ export type BookingAddressType = 'home' | 'work';
 
 export type StoredBooking = {
   id: string;
+  userId: string;
   providerId: string;
   providerName: string;
   category: string;
@@ -32,6 +33,10 @@ export function createBookingId(): string {
   return `book_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 }
 
+export async function getAppointments(): Promise<StoredBooking[]> {
+  return getAllBookings();
+}
+
 export async function getAllBookings(): Promise<StoredBooking[]> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -43,19 +48,31 @@ export async function getAllBookings(): Promise<StoredBooking[]> {
   }
 }
 
+export async function saveAppointments(bookings: StoredBooking[]): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+}
+
+export async function getBookingsForUser(userEmail: string): Promise<StoredBooking[]> {
+  const e = userEmail.trim().toLowerCase();
+  const all = await getAllBookings();
+  return all.filter((b) => b.userId === e);
+}
+
 export async function appendBooking(booking: StoredBooking): Promise<void> {
   const all = await getAllBookings();
   all.push(booking);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  await saveAppointments(all);
 }
 
-export async function cancelBookingById(bookingId: string): Promise<boolean> {
+export async function cancelBookingById(bookingId: string, userEmail: string): Promise<boolean> {
   const all = await getAllBookings();
   const idx = all.findIndex((b) => b.id === bookingId);
   if (idx === -1) return false;
+  const e = userEmail.trim().toLowerCase();
+  if (all[idx].userId !== e) return false;
   if (all[idx].cancelled) return true;
   all[idx] = { ...all[idx], cancelled: true, cancelledAt: new Date().toISOString() };
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  await saveAppointments(all);
   return true;
 }
 

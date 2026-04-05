@@ -1,3 +1,4 @@
+import { getCurrentUser } from '@/auth/session';
 import { AppointmentBookedSuccessModal } from '@/components/appointments/AppointmentBookedSuccessModal';
 import { BookingCalendarModal, type BookingConfirmDetails } from '@/components/provider/BookingCalendarModal';
 import { ServiceWorkHero } from '@/components/provider/ServiceWorkHero';
@@ -10,7 +11,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function paramString(v: string | string[] | undefined): string | undefined {
@@ -54,9 +55,16 @@ export default function ProviderDetailScreen() {
 
   const confirmBooking = useCallback(
     async (dateIso: string, time: string, bookingDetails: BookingConfirmDetails) => {
+      const cu = await getCurrentUser();
+      if (!cu?.email) {
+        Alert.alert('Sign in required', 'Please log in to book an appointment.');
+        return;
+      }
+      const userId = cu.email.trim().toLowerCase();
       const bookingId = createBookingId();
       await appendBooking({
         id: bookingId,
+        userId,
         providerId,
         providerName: detail.name,
         category: category ?? 'Service',
@@ -69,6 +77,7 @@ export default function ProviderDetailScreen() {
         bookedAt: new Date().toISOString(),
       });
       await appendNotification({
+        userId,
         kind: 'appointment_booked',
         title: 'Appointment booked',
         body: `Your ${category ?? 'service'} with ${detail.name} on ${formatVisitLabel(dateIso, time)} is confirmed.`,
@@ -77,7 +86,7 @@ export default function ProviderDetailScreen() {
       setBookingModalOpen(false);
       setBookingSuccessOpen(true);
     },
-    [providerId, detail.name, category, imageUrl, hasRating, ratingNum, router],
+    [providerId, detail.name, category, imageUrl, hasRating, ratingNum],
   );
 
   const workLabel = category ? `${category} service` : 'Service';

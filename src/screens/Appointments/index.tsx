@@ -1,3 +1,4 @@
+import { getCurrentUser } from '@/auth/session';
 import { CancelAppointmentConfirmModal } from '@/components/appointments/CancelAppointmentConfirmModal';
 import { ProviderCard } from '@/components/home/ProviderCard';
 import { AppScreenBackground } from '@/constants/screen';
@@ -5,7 +6,7 @@ import { formatHourlyRateInr, hourlyRateForProvider } from '@/data/mockProviders
 import { findListedProviderById } from '@/data/providersByService';
 import {
   cancelBookingById,
-  getAllBookings,
+  getBookingsForUser,
   todayLocalIsoDate,
   type BookingAddressType,
   type StoredBooking,
@@ -175,9 +176,15 @@ export default function AppointmentsScreen() {
   useFocusEffect(
     useCallback(() => {
       let dead = false;
-      void getAllBookings().then((rows) => {
+      void (async () => {
+        const cu = await getCurrentUser();
+        if (!cu?.email) {
+          if (!dead) setBookings([]);
+          return;
+        }
+        const rows = await getBookingsForUser(cu.email);
         if (!dead) setBookings(rows);
-      });
+      })();
       return () => {
         dead = true;
       };
@@ -240,17 +247,22 @@ export default function AppointmentsScreen() {
     const snapshot = upcomingDetail;
     const id = snapshot?.id;
     if (!id || cancelInFlight.current) return;
+    const cu = await getCurrentUser();
+    if (!cu?.email) return;
+    const userId = cu.email.trim().toLowerCase();
     cancelInFlight.current = true;
     setIsCancelling(true);
     try {
-      await cancelBookingById(id);
+      const cancelledOk = await cancelBookingById(id, userId);
+      if (!cancelledOk) return;
       await appendNotification({
+        userId,
         kind: 'appointment_cancelled',
         title: 'Appointment cancelled',
         body: `Your ${snapshot.category} visit with ${snapshot.providerName} on ${formatBookingWhen(snapshot.date, snapshot.time)} was cancelled.`,
         bookingId: id,
       });
-      const rows = await getAllBookings();
+      const rows = await getBookingsForUser(userId);
       setBookings(rows);
       setShowCancelConfirm(false);
       setUpcomingDetail(null);

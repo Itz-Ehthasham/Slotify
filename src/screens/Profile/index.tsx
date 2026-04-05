@@ -1,8 +1,9 @@
+import { getCurrentUser } from '@/auth/session';
 import { Brand } from '@/constants/brand';
 import { AppScreenBackground } from '@/constants/screen';
 import {
-  getAllNotifications,
-  setNotificationsLastSeenNow,
+  getNotificationsForUser,
+  setNotificationsLastSeenNowForUser,
   type StoredNotification,
 } from '@/storage/notificationsStorage';
 import { useFocusEffect } from '@react-navigation/native';
@@ -33,8 +34,14 @@ export default function ProfileScreen() {
     useCallback(() => {
       let dead = false;
       void (async () => {
-        await setNotificationsLastSeenNow();
-        const rows = await getAllNotifications();
+        const cu = await getCurrentUser();
+        if (!cu?.email) {
+          if (!dead) setItems([]);
+          return;
+        }
+        const email = cu.email.trim().toLowerCase();
+        await setNotificationsLastSeenNowForUser(email);
+        const rows = await getNotificationsForUser(email);
         if (!dead) setItems(rows);
       })();
       return () => {

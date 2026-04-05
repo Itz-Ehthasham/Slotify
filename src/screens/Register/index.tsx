@@ -1,4 +1,4 @@
-import { saveUser } from '@/auth/session';
+import { registerUser } from '@/auth/session';
 import { PasswordField } from '@/components/auth/PasswordField';
 import { SlotifyLogo } from '@/components/splash/SlotifyLogo';
 import { Brand } from '@/constants/brand';
@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -48,7 +49,23 @@ export default function RegisterScreen() {
 
   const onSubmit = async () => {
     const normalizedEmail = email.trim().toLowerCase();
-    await saveUser({ email: normalizedEmail });
+    if (!normalizedEmail.includes('@')) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+    if (!password.trim()) {
+      Alert.alert('Password required', 'Please enter a password.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Passwords do not match', 'Make sure both password fields match.');
+      return;
+    }
+    const result = await registerUser(normalizedEmail, password);
+    if (result === 'duplicate') {
+      Alert.alert('Account exists', 'An account with this email is already registered. Try logging in.');
+      return;
+    }
     router.replace('/(tabs)');
   };
 

@@ -1,5 +1,4 @@
-import { isMockUserLogin } from '@/auth/mockUser';
-import { saveUser } from '@/auth/session';
+import { loginUser } from '@/auth/session';
 import { PasswordField } from '@/components/auth/PasswordField';
 import { SlotifyLogo } from '@/components/splash/SlotifyLogo';
 import { Brand } from '@/constants/brand';
@@ -48,12 +47,12 @@ export default function LoginScreen() {
   }, []);
 
   const onSubmit = async () => {
-    if (!isMockUserLogin(email, password)) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const ok = await loginUser(normalizedEmail, password);
+    if (!ok) {
       Alert.alert('Sign in failed', 'Email or password is incorrect.');
       return;
     }
-    const normalizedEmail = email.trim().toLowerCase();
-    await saveUser({ email: normalizedEmail });
     router.replace('/(tabs)');
   };
 

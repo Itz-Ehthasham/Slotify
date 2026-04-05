@@ -1,23 +1,52 @@
+import { ProviderCard } from '@/components/home/ProviderCard';
 import { AppScreenBackground } from '@/constants/screen';
-import { mockProvidersForService } from '@/data/mockProviders';
+import type { ListedServiceProvider } from '@/data/providersByService';
+import { getProvidersForServiceLabel } from '@/data/providersByService';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
-import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useMemo } from 'react';
+import { FlatList, ListRenderItem, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+function paramString(v: string | string[] | undefined): string | undefined {
+  if (v == null) return undefined;
+  return Array.isArray(v) ? v[0] : v;
+}
 
 export default function ProviderListScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ service?: string }>();
   const service =
-    typeof params.service === 'string' && params.service.length > 0 ? params.service : 'Services';
+    paramString(params.service)?.trim() && (paramString(params.service)?.length ?? 0) > 0
+      ? paramString(params.service)!.trim()
+      : 'Services';
 
-  const data = mockProvidersForService(service);
+  const data = useMemo(() => getProvidersForServiceLabel(service), [service]);
+
+  const openDetail = (p: ListedServiceProvider) => {
+    router.push({
+      pathname: '/provider-detail',
+      params: {
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        image: p.image,
+        rating: String(p.rating),
+      },
+    } as Href);
+  };
+
+  const renderItem: ListRenderItem<ListedServiceProvider> = ({ item }) => (
+    <View style={styles.cardOuter}>
+      <ProviderCard
+        name={item.name}
+        category={item.category}
+        imageUrl={item.image}
+        rating={item.rating}
+        onPress={() => openDetail(item)}
+      />
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -33,34 +62,18 @@ export default function ProviderListScreen() {
         <Text style={styles.title} numberOfLines={1}>
           {service}
         </Text>
-        <View style={styles.topBarSpacer} />
+        <View style={styles.topSpacer} />
       </View>
 
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
+        renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <Text style={styles.listHeading}>Providers near you</Text>
         }
-        renderItem={({ item }) => (
-          <Pressable
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-            onPress={() =>
-              router.push({
-                pathname: '/provider-detail',
-                params: { id: item.id, name: item.name },
-              } as Href)
-            }
-            accessibilityRole="button"
-            accessibilityLabel={`Open ${item.name}`}>
-            <View style={styles.cardMain}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </Pressable>
-        )}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
@@ -95,50 +108,21 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
     textAlign: 'center',
   },
-  topBarSpacer: {
+  topSpacer: {
     width: 36,
   },
   listContent: {
-    padding: 18,
+    paddingHorizontal: 18,
     paddingBottom: 32,
+  },
+  cardOuter: {
+    marginHorizontal: 0,
   },
   listHeading: {
     fontSize: 15,
     fontWeight: '600',
     color: '#6B7280',
     marginBottom: 14,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 15, 15, 0.06)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardPressed: {
-    opacity: 0.92,
-  },
-  cardMain: {
-    flex: 1,
-    gap: 4,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#6B7280',
+    paddingTop: 4,
   },
 });

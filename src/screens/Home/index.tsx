@@ -4,7 +4,7 @@ import { AppScreenBackground } from '@/constants/screen';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { type Href, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { type ComponentProps, useCallback, useMemo, useState } from 'react';
 import {
   type ImageSourcePropType,
   FlatList,
@@ -28,24 +28,35 @@ const SECTION_AFTER_SEARCH = 10;
 /** Full app mark (charcoal tile + lime icon) — sharper than PNG in a nested box */
 const brandLogoSvg = require('../../../assets/images/logo.svg') as ImageSourcePropType;
 
-const cleaningIcon = require('../../../assets/icons/cleaning.svg') as ImageSourcePropType;
-const repairingIcon = require('../../../assets/icons/repairing.svg') as ImageSourcePropType;
-const electricianIcon = require('../../../assets/icons/electrician.svg') as ImageSourcePropType;
 const carpenterIcon = require('../../../assets/icons/carpenter.svg') as ImageSourcePropType;
+const plumberIcon = require('../../../assets/icons/plumber.svg') as ImageSourcePropType;
+const painterIcon = require('../../../assets/icons/painter.svg') as ImageSourcePropType;
+const saloonIcon = require('../../../assets/icons/saloon.svg') as ImageSourcePropType;
+const smarthomeIcon = require('../../../assets/icons/smarthome.svg') as ImageSourcePropType;
+const repairingIcon = require('../../../assets/icons/repairing.svg') as ImageSourcePropType;
+const workerIcon = require('../../../assets/icons/worker.svg') as ImageSourcePropType;
 const moreIcon = require('../../../assets/icons/more.svg') as ImageSourcePropType;
 
-type ServiceItem = { key: string; label: string; source: ImageSourcePropType };
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
+type ServiceItem =
+  | { key: string; label: string; variant: 'image'; source: ImageSourcePropType }
+  | { key: string; label: string; variant: 'ionicon'; ionicon: IoniconName };
+
+const GRID_ICON_COLOR = '#1C1F34';
+
+/** One item per category — Cleaning & Electrician use Expo Ionicons */
 const SERVICES: ServiceItem[] = [
-  { key: '1', label: 'Cleaning', source: cleaningIcon },
-  { key: '2', label: 'Repairing', source: repairingIcon },
-  { key: '3', label: 'Electrician', source: electricianIcon },
-  { key: '4', label: 'Carpenter', source: carpenterIcon },
-  { key: '5', label: 'Repairing', source: repairingIcon },
-  { key: '6', label: 'Electrician', source: electricianIcon },
-  { key: '7', label: 'Carpenter', source: carpenterIcon },
-  { key: '8', label: 'Repairing', source: repairingIcon },
-  { key: '9', label: 'More', source: moreIcon },
+  { key: 'cleaning', label: 'Cleaning', variant: 'ionicon', ionicon: 'sparkles-outline' },
+  { key: 'electrician', label: 'Electrician', variant: 'ionicon', ionicon: 'flash-outline' },
+  { key: 'carpenter', label: 'Carpenter', variant: 'image', source: carpenterIcon },
+  { key: 'plumbing', label: 'Plumbing', variant: 'image', source: plumberIcon },
+  { key: 'painting', label: 'Painting', variant: 'image', source: painterIcon },
+  { key: 'salon', label: 'Hair salon', variant: 'image', source: saloonIcon },
+  { key: 'smart-home', label: 'Smart home', variant: 'image', source: smarthomeIcon },
+  { key: 'tv-repair', label: 'TV repair', variant: 'image', source: repairingIcon },
+  { key: 'handyman', label: 'Handyman', variant: 'image', source: workerIcon },
+  { key: 'more', label: 'More', variant: 'image', source: moreIcon },
 ];
 
 function HomeListHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
@@ -132,7 +143,13 @@ export default function HomeScreen() {
         onPress={() => openProviderList(item.label)}
         accessibilityRole="button"
         accessibilityLabel={item.label}>
-        <Image source={item.source} style={styles.cardIcon} contentFit="contain" />
+        {item.variant === 'ionicon' ? (
+          <View style={styles.cardIconInner}>
+            <Ionicons name={item.ionicon} size={44} color={GRID_ICON_COLOR} />
+          </View>
+        ) : (
+          <Image source={item.source} style={styles.cardIcon} contentFit="contain" />
+        )}
         <Text style={styles.cardLabel} numberOfLines={2}>
           {item.label}
         </Text>
@@ -278,6 +295,12 @@ const styles = StyleSheet.create({
   cardIcon: {
     width: 52,
     height: 52,
+  },
+  cardIconInner: {
+    width: 52,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardLabel: {
     fontSize: 13,

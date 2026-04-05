@@ -26,7 +26,8 @@
         "foregroundImage": "./assets/icons/logo.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ehthasham.Slotify"
     },
     "web": {
       "output": "static",
@@ -56,6 +57,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c0e8aba0-afcd-4f73-9c0e-632021efa816"
+      }
     }
   }
 }

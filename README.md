@@ -1,3 +1,12 @@
+
+
+# Slotify
+
+Slotify is a cross-platform mobile app for discovering service providers, booking appointment slots, managing visits, and tracking in-app notifications. It is built with **Expo** and **React Native**, uses **file-based routing** via **Expo Router**, and persists user-scoped data locally with **AsyncStorage**.
+
+**Expo project:** [@ehthasham/Slotify](https://expo.dev/accounts/ehthasham/projects/Slotify)
+
+---
 ## 👨‍💻 About the Developer
 
 Hi, I’m **Ehthasham Mustafa**, a final-year B.Tech student and aspiring Software Developer passionate about building scalable applications and AI-powered solutions.
@@ -5,14 +14,6 @@ Hi, I’m **Ehthasham Mustafa**, a final-year B.Tech student and aspiring Softwa
 🔗 **GitHub:** https://github.com/Itz-Ehthasham  
 💼 **LinkedIn:** https://linkedin.com/in/ehthasham-mustafa/  
 📧 **Email:** ehthasham678@gmail.com 
-
----
-
-# Slotify
-
-Slotify is a cross-platform mobile app for discovering service providers, booking appointment slots, managing visits, and tracking in-app notifications. It is built with **Expo** and **React Native**, uses **file-based routing** via **Expo Router**, and persists user-scoped data locally with **AsyncStorage**.
-
-**Expo project:** [@ehthasham/Slotify](https://expo.dev/accounts/ehthasham/projects/Slotify)
 
 ---
 

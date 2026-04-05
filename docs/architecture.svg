@@ -1,38 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420" role="img" aria-label="Slotify high-level architecture">
   <defs>
-    <style>
-      .box { fill: #ffffff; stroke: #1a1a1a; stroke-width: 2; rx: 8; }
-      .title { font: 700 15px system-ui, -apple-system, sans-serif; fill: #111; }
-      .sub { font: 500 12px system-ui, -apple-system, sans-serif; fill: #4b5563; }
-      .lime { fill: #ccfd04; }
-      .arrow { stroke: #1a1a1a; stroke-width: 1.5; fill: none; marker-end: url(#m); }
-    </style>
-    <marker id="m" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 z" fill="#1a1a1a"/>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#1a1a1a"/>
     </marker>
   </defs>
-  <rect width="100%" height="100%" fill="#f9fafb"/>
-  <text x="360" y="36" text-anchor="middle" class="title" font-size="18">Slotify  high-level architecture</text>
-  <rect x="40" y="70" width="160" height="72" class="box"/>
-  <rect x="40" y="70" width="160" height="14" class="lime"/>
-  <text x="120" y="108" text-anchor="middle" class="title">Expo / React Native</text>
-  <text x="120" y="128" text-anchor="middle" class="sub">expo-router UI</text>
-  <rect x="280" y="70" width="160" height="88" class="box"/>
-  <rect x="280" y="70" width="160" height="14" class="lime"/>
-  <text x="360" y="105" text-anchor="middle" class="title">Screens &amp; flows</text>
-  <text x="360" y="124" text-anchor="middle" class="sub">Home · Providers · Booking</text>
-  <text x="360" y="142" text-anchor="middle" class="sub">Appointments · Notifications</text>
-  <rect x="520" y="70" width="160" height="72" class="box"/>
-  <rect x="520" y="70" width="160" height="14" class="lime"/>
-  <text x="600" y="108" text-anchor="middle" class="title">Auth session</text>
-  <text x="600" y="128" text-anchor="middle" class="sub">users / currentUser</text>
-  <path d="M200 106 L275 106" class="arrow"/>
-  <path d="M440 106 L515 106" class="arrow"/>
-  <rect x="200" y="220" width="320" height="100" class="box"/>
-  <rect x="200" y="220" width="320" height="14" class="lime"/>
-  <text x="360" y="255" text-anchor="middle" class="title">AsyncStorage (device)</text>
-  <text x="360" y="278" text-anchor="middle" class="sub">Bookings (scoped by userId) · Notifications · Last-seen</text>
-  <text x="360" y="298" text-anchor="middle" class="sub">Provider lists &amp; mock data (in bundle)</text>
-  <path d="M360 158 L360 215" class="arrow"/>
-  <text x="372" y="188" class="sub">read / write</text>
+  <rect x="0" y="0" width="720" height="420" fill="#f9fafb"/>
+  <text x="360" y="34" text-anchor="middle" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">Slotify - high-level architecture</text>
+  <g id="layer-client">
+    <rect x="40" y="64" width="160" height="72" rx="8" ry="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+    <rect x="40" y="64" width="160" height="14" rx="8" ry="0" fill="#ccfd04" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="120" y="104" text-anchor="middle" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Expo / React Native</text>
+    <text x="120" y="124" text-anchor="middle" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="12">expo-router UI</text>
+  </g>
+  <g id="layer-screens">
+    <rect x="280" y="64" width="160" height="88" rx="8" ry="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+    <rect x="280" y="64" width="160" height="14" rx="8" ry="0" fill="#ccfd04" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="360" y="100" text-anchor="middle" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Screens and flows</text>
+    <text x="360" y="118" text-anchor="middle" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="12">Home, Providers, Booking</text>
+    <text x="360" y="136" text-anchor="middle" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="12">Appointments, Notifications</text>
+  </g>
+  <g id="layer-auth">
+    <rect x="520" y="64" width="160" height="72" rx="8" ry="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+    <rect x="520" y="64" width="160" height="14" rx="8" ry="0" fill="#ccfd04" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="600" y="104" text-anchor="middle" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Auth session</text>
+    <text x="600" y="124" text-anchor="middle" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="12">users / currentUser</text>
+  </g>
+  <path d="M202 100 L276 100" stroke="#1a1a1a" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M442 100 L516 100" stroke="#1a1a1a" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <g id="layer-storage">
+    <rect x="200" y="214" width="320" height="100" rx="8" ry="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+    <rect x="200" y="214" width="320" height="14" rx="8" ry="0" fill="#ccfd04" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="360" y="249" text-anchor="middle" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">AsyncStorage (device)</text>
+    <text x="360" y="272" text-anchor="middle" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="11">Bookings (userId), Notifications, last-seen</text>
+    <text x="360" y="292" text-anchor="middle" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="11">Provider lists and mock data (bundle)</text>
+  </g>
+  <path d="M360 154 L360 208" stroke="#1a1a1a" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="368" y="184" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="11">read / write</text>
 </svg>

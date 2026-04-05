@@ -3,7 +3,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 export type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
-/** Used when no PNG is registered for this category */
 export const SERVICE_HERO_ICON: Record<string, IoniconName> = {
   cleaning: 'sparkles-outline',
   'hair salon': 'cut-outline',

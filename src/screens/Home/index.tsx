@@ -25,7 +25,6 @@ const SEARCH_FLOAT = 22;
 const HEADER_BOTTOM_RESERVE = 64;
 const SECTION_AFTER_SEARCH = 10;
 
-/** Full app mark (charcoal tile + lime icon) — sharper than PNG in a nested box */
 const brandLogoSvg = require('../../../assets/images/logo.svg') as ImageSourcePropType;
 
 const carpenterIcon = require('../../../assets/icons/carpenter.svg') as ImageSourcePropType;
@@ -45,7 +44,6 @@ type ServiceItem =
 
 const GRID_ICON_COLOR = '#1C1F34';
 
-/** One item per category — Cleaning & Electrician use Expo Ionicons */
 const SERVICES: ServiceItem[] = [
   { key: 'cleaning', label: 'Cleaning', variant: 'ionicon', ionicon: 'sparkles-outline' },
   { key: 'electrician', label: 'Electrician', variant: 'ionicon', ionicon: 'flash-outline' },

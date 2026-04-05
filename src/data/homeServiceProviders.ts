@@ -1,5 +1,3 @@
-/** Featured providers on Home — replace with API */
-
 export type HomeServiceProvider = {
   id: string;
   name: string;

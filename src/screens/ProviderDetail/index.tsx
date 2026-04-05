@@ -1,19 +1,32 @@
-import { BookingCalendarModal } from '@/components/provider/BookingCalendarModal';
+import { AppointmentBookedSuccessModal } from '@/components/appointments/AppointmentBookedSuccessModal';
+import { BookingCalendarModal, type BookingConfirmDetails } from '@/components/provider/BookingCalendarModal';
 import { ServiceWorkHero } from '@/components/provider/ServiceWorkHero';
 import { Brand } from '@/constants/brand';
 import { AppScreenBackground } from '@/constants/screen';
 import { formatHourlyRateInr, getProviderDetail } from '@/data/mockProviders';
 import { appendBooking, createBookingId } from '@/storage/bookingsStorage';
+import { appendNotification } from '@/storage/notificationsStorage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
-import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function paramString(v: string | string[] | undefined): string | undefined {
   if (v == null) return undefined;
   return Array.isArray(v) ? v[0] : v;
+}
+
+function formatVisitLabel(dateIso: string, time: string): string {
+  const d = new Date(dateIso + 'T12:00:00');
+  const datePart = d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  return `${datePart} · ${time}`;
 }
 
 export default function ProviderDetailScreen() {
@@ -37,26 +50,34 @@ export default function ProviderDetailScreen() {
   const providerId = id || 'unknown';
 
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [bookingSuccessOpen, setBookingSuccessOpen] = useState(false);
 
   const confirmBooking = useCallback(
-    async (dateIso: string, time: string) => {
+    async (dateIso: string, time: string, bookingDetails: BookingConfirmDetails) => {
+      const bookingId = createBookingId();
       await appendBooking({
-        id: createBookingId(),
+        id: bookingId,
         providerId,
         providerName: detail.name,
         category: category ?? 'Service',
         time,
         date: dateIso,
+        providerImage: imageUrl,
+        providerRating: hasRating ? ratingNum : undefined,
+        serviceAddress: bookingDetails.serviceAddress,
+        addressType: bookingDetails.addressType,
+        bookedAt: new Date().toISOString(),
+      });
+      await appendNotification({
+        kind: 'appointment_booked',
+        title: 'Appointment booked',
+        body: `Your ${category ?? 'service'} with ${detail.name} on ${formatVisitLabel(dateIso, time)} is confirmed.`,
+        bookingId,
       });
       setBookingModalOpen(false);
-      Alert.alert('Appointment Booked', 'Your slot has been reserved.', [
-        {
-          text: 'OK',
-          onPress: () => router.replace('/(tabs)/appointments' as Href),
-        },
-      ]);
+      setBookingSuccessOpen(true);
     },
-    [providerId, detail.name, category, router],
+    [providerId, detail.name, category, imageUrl, hasRating, ratingNum, router],
   );
 
   const workLabel = category ? `${category} service` : 'Service';
@@ -133,6 +154,16 @@ export default function ProviderDetailScreen() {
 
         <Text style={styles.description}>{detail.description}</Text>
 
+        <View style={styles.phoneBlock}>
+          <View style={styles.phoneIconWrap}>
+            <Ionicons name="call-outline" size={22} color="#374151" />
+          </View>
+          <View style={styles.phoneTextCol}>
+            <Text style={styles.phoneLabel}>Phone</Text>
+            <Text style={styles.phoneValue}>{detail.phone}</Text>
+          </View>
+        </View>
+
         <Pressable
           onPress={() => setBookingModalOpen(true)}
           style={({ pressed }) => [styles.bookBtn, pressed && styles.bookBtnPressed]}
@@ -151,6 +182,17 @@ export default function ProviderDetailScreen() {
         slots={detail.slots}
         hourlyRate={detail.hourlyRate}
         onConfirmBooking={confirmBooking}
+      />
+      <AppointmentBookedSuccessModal
+        visible={bookingSuccessOpen}
+        onViewAppointments={() => {
+          setBookingSuccessOpen(false);
+          router.replace('/(tabs)/appointments');
+        }}
+        onBackToHome={() => {
+          setBookingSuccessOpen(false);
+          router.replace('/(tabs)');
+        }}
       />
     </SafeAreaView>
   );
@@ -315,10 +357,48 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#4B5563',
     lineHeight: 24,
+    marginBottom: 20,
+  },
+  phoneBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     marginBottom: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 15, 15, 0.08)',
+  },
+  phoneIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phoneTextCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  phoneLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  phoneValue: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#111827',
+    letterSpacing: -0.2,
   },
   bookBtn: {
-    marginTop: 80,
+    marginTop: 8,
     width: '100%',
     alignSelf: 'stretch',
     backgroundColor: '#000000',

@@ -1,12 +1,6 @@
-/**
- * Mock providers keyed by the exact service label from Home → provider-list.
- * Each person is unique (id, name, photo). Replace with API.
- */
-
 export type ListedServiceProvider = {
   id: string;
   name: string;
-  /** Shown on card — matches the service the user picked */
   category: string;
   image: string;
   rating: number;
@@ -22,7 +16,6 @@ function p(
   return { id, name, category, image, rating };
 }
 
-/** Keys must match `label` on Home `SERVICES` (except "More") */
 export const PROVIDERS_BY_SERVICE: Record<string, ListedServiceProvider[]> = {
   Cleaning: [
     p('sp-clean-1', 'Rahul Sharma', 'Cleaning', 'https://randomuser.me/api/portraits/men/11.jpg', 4.7),
@@ -71,7 +64,6 @@ export const PROVIDERS_BY_SERVICE: Record<string, ListedServiceProvider[]> = {
   ],
 };
 
-/** Browsable mix when user taps "More" */
 const MORE_PROVIDERS: ListedServiceProvider[] = [
   p('sp-more-1', 'Ishita Ghosh', 'Cleaning', 'https://randomuser.me/api/portraits/women/12.jpg', 4.7),
   p('sp-more-2', 'Arvind Menon', 'Electrician', 'https://randomuser.me/api/portraits/men/14.jpg', 4.6),

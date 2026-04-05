@@ -1,10 +1,13 @@
-import { Tabs } from 'expo-router';
-import { Image } from 'expo-image';
-import React from 'react';
-import { type ImageSourcePropType } from 'react-native';
-
 import { AppScreenBackground } from '@/constants/screen';
 import { Colors } from '@/constants/theme';
+import {
+  getUnreadNotificationCount,
+  subscribeUnreadNotificationsChanged,
+} from '@/storage/notificationsStorage';
+import { Tabs } from 'expo-router';
+import { Image } from 'expo-image';
+import React, { useCallback, useEffect, useState } from 'react';
+import { type ImageSourcePropType, StyleSheet, View } from 'react-native';
 
 const ICON = 26;
 
@@ -19,6 +22,26 @@ function TabIcon({ source, color }: { source: ImageSourcePropType; color: string
       style={{ width: ICON, height: ICON, tintColor: color }}
       contentFit="contain"
     />
+  );
+}
+
+function NotificationsTabIcon({ focused, color }: { focused: boolean; color: string }) {
+  const [unread, setUnread] = useState(0);
+
+  const refresh = useCallback(() => {
+    void getUnreadNotificationCount().then(setUnread);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    return subscribeUnreadNotificationsChanged(refresh);
+  }, [refresh]);
+
+  return (
+    <View style={styles.notifIconWrap}>
+      <TabIcon source={notificationsIcon} color={focused ? Colors.light.tabBarIconTintActive : color} />
+      {unread > 0 ? <View style={styles.notifBadgeDot} /> : null}
+    </View>
   );
 }
 
@@ -64,11 +87,29 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Notifications',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon source={notificationsIcon} color={focused ? Colors.light.tabBarIconTintActive : color} />
-          ),
+          tabBarIcon: ({ focused, color }) => <NotificationsTabIcon focused={focused} color={color} />,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  notifIconWrap: {
+    width: 32,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notifBadgeDot: {
+    position: 'absolute',
+    top: 1,
+    right: 3,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: '#EF4444',
+    borderWidth: 2,
+    borderColor: AppScreenBackground,
+  },
+});

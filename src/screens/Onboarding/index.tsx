@@ -14,7 +14,6 @@ const DOT_INACTIVE = '#D1D5DB';
 const SKIP_COLOR = '#374151';
 const BODY_COLOR = '#6B7280';
 
-/** Illustration frame from design (points) */
 const ART_X = 25;
 const ART_Y = 118;
 const ART_W = 325;

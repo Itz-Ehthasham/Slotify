@@ -1,6 +1,10 @@
 import { Brand } from '@/constants/brand';
 import { formatHourlyRateInr } from '@/data/mockProviders';
-import { getBookedTimesForProviderOnDate, todayLocalIsoDate } from '@/storage/bookingsStorage';
+import {
+  type BookingAddressType,
+  getBookedTimesForProviderOnDate,
+  todayLocalIsoDate,
+} from '@/storage/bookingsStorage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -11,6 +15,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -62,6 +67,11 @@ function formatDateDropdownLabel(iso: string): string {
   });
 }
 
+export type BookingConfirmDetails = {
+  serviceAddress: string;
+  addressType: BookingAddressType;
+};
+
 export type BookingCalendarModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -70,7 +80,7 @@ export type BookingCalendarModalProps = {
   category: string;
   slots: string[];
   hourlyRate: number;
-  onConfirmBooking: (dateIso: string, time: string) => Promise<void>;
+  onConfirmBooking: (dateIso: string, time: string, details: BookingConfirmDetails) => Promise<void>;
 };
 
 export function BookingCalendarModal({
@@ -93,6 +103,8 @@ export function BookingCalendarModal({
   const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [addressType, setAddressType] = useState<BookingAddressType>('home');
+  const [serviceAddress, setServiceAddress] = useState('');
 
   useEffect(() => {
     if (!visible) return;
@@ -102,6 +114,8 @@ export function BookingCalendarModal({
     setSelectedSlot(null);
     setBookedSlots(new Set());
     setDatePickerOpen(false);
+    setAddressType('home');
+    setServiceAddress('');
   }, [visible]);
 
   useEffect(() => {
@@ -188,11 +202,17 @@ export function BookingCalendarModal({
     setDatePickerOpen(false);
   };
 
+  const addressOk = serviceAddress.trim().length > 0;
+  const canConfirm = Boolean(selectedSlot && addressOk && !submitting);
+
   const onConfirm = async () => {
-    if (!selectedSlot || submitting) return;
+    if (!canConfirm || !selectedSlot) return;
     setSubmitting(true);
     try {
-      await onConfirmBooking(selectedDateIso, selectedSlot);
+      await onConfirmBooking(selectedDateIso, selectedSlot, {
+        serviceAddress: serviceAddress.trim(),
+        addressType,
+      });
     } catch {
       Alert.alert('Booking failed', 'Could not save your appointment. Please try again.');
     } finally {
@@ -356,6 +376,59 @@ export function BookingCalendarModal({
               })}
             </View>
 
+            <Text style={[styles.blockLabel, styles.addressSectionLabel]}>Service address</Text>
+            <Text style={styles.addressHint}>Where should the professional visit?</Text>
+            <View style={styles.addressTypeRow}>
+              <Pressable
+                onPress={() => setAddressType('home')}
+                style={({ pressed }) => [
+                  styles.typeChip,
+                  addressType === 'home' && styles.typeChipSelected,
+                  pressed && styles.typeChipPressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: addressType === 'home' }}>
+                <Ionicons
+                  name="home-outline"
+                  size={18}
+                  color={addressType === 'home' ? Brand.logoLime : '#374151'}
+                />
+                <Text
+                  style={[styles.typeChipText, addressType === 'home' && styles.typeChipTextSelected]}>
+                  Home
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setAddressType('work')}
+                style={({ pressed }) => [
+                  styles.typeChip,
+                  addressType === 'work' && styles.typeChipSelected,
+                  pressed && styles.typeChipPressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: addressType === 'work' }}>
+                <Ionicons
+                  name="business-outline"
+                  size={18}
+                  color={addressType === 'work' ? Brand.logoLime : '#374151'}
+                />
+                <Text
+                  style={[styles.typeChipText, addressType === 'work' && styles.typeChipTextSelected]}>
+                  Work
+                </Text>
+              </Pressable>
+            </View>
+            <TextInput
+              value={serviceAddress}
+              onChangeText={setServiceAddress}
+              placeholder="Flat / house no., street, area, landmark, city, PIN"
+              placeholderTextColor="#9CA3AF"
+              style={styles.addressInput}
+              multiline
+              textAlignVertical="top"
+              accessibilityLabel="Full service address"
+            />
+
             <View style={styles.priceBox}>
               <Text style={styles.priceLabel}>Price</Text>
               <Text style={styles.priceValue}>{formatHourlyRateInr(hourlyRate)}</Text>
@@ -364,11 +437,11 @@ export function BookingCalendarModal({
 
             <Pressable
               onPress={() => void onConfirm()}
-              disabled={!selectedSlot || submitting}
+              disabled={!canConfirm}
               style={({ pressed }) => [
                 styles.confirmBtn,
-                (!selectedSlot || submitting) && styles.confirmBtnDisabled,
-                pressed && selectedSlot && !submitting && styles.confirmBtnPressed,
+                !canConfirm && styles.confirmBtnDisabled,
+                pressed && canConfirm && styles.confirmBtnPressed,
               ]}
               accessibilityRole="button"
               accessibilityLabel="Confirm booking">
@@ -378,7 +451,7 @@ export function BookingCalendarModal({
                 <Text
                   style={[
                     styles.confirmBtnText,
-                    !selectedSlot && !submitting && styles.confirmBtnTextDisabled,
+                    !canConfirm && !submitting && styles.confirmBtnTextDisabled,
                   ]}>
                   Confirm booking
                 </Text>
@@ -452,7 +525,7 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   sheetScroll: {
-    maxHeight: 520,
+    maxHeight: 580,
   },
   sheetScrollContent: {
     paddingHorizontal: 20,
@@ -580,6 +653,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+    marginBottom: 16,
+  },
+  addressSectionLabel: {
+    marginTop: 4,
+  },
+  addressHint: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginBottom: 12,
+    marginTop: -4,
+  },
+  addressTypeRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  typeChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 15, 15, 0.1)',
+  },
+  typeChipSelected: {
+    backgroundColor: '#000000',
+    borderColor: '#000000',
+  },
+  typeChipPressed: {
+    opacity: 0.9,
+  },
+  typeChipText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#374151',
+  },
+  typeChipTextSelected: {
+    color: Brand.logoLime,
+  },
+  addressInput: {
+    minHeight: 88,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 15, 15, 0.12)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#111827',
+    backgroundColor: '#FFFFFF',
     marginBottom: 20,
   },
   slotChip: {

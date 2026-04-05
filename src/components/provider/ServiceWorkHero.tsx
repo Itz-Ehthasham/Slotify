@@ -8,10 +8,6 @@ type Props = {
   category?: string;
 };
 
-/**
- * Hero for “Work they do”: uses a bundled PNG/WebP when listed in
- * `serviceWorkHeroRaster.ts`; otherwise a large category icon (always works on Android).
- */
 export function ServiceWorkHero({ category }: Props) {
   const key = category?.trim().toLowerCase() ?? '';
   const raster = SERVICE_HERO_RASTER[key];

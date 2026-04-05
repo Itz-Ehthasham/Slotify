@@ -18,13 +18,9 @@ export type ConfirmModalProps = {
   cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
-  /** Optional style for the card (e.g. maxWidth) */
   cardStyle?: StyleProp<ViewStyle>;
 };
 
-/**
- * Centered alert-style dialog: scrim tap or cancel closes; confirm runs `onConfirm`.
- */
 export function ConfirmModal({
   visible,
   title,

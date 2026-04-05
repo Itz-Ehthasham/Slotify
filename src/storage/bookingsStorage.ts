@@ -2,15 +2,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = '@slotify/bookings_v1';
 
-/** Persisted shape matches app requirements; `providerId` blocks duplicate slot bookings per day. */
+export type BookingAddressType = 'home' | 'work';
+
 export type StoredBooking = {
   id: string;
   providerId: string;
   providerName: string;
   category: string;
   time: string;
-  /** Local calendar date `YYYY-MM-DD` */
   date: string;
+  providerImage?: string;
+  providerRating?: number;
+  serviceAddress?: string;
+  addressType?: BookingAddressType;
+  cancelled?: boolean;
+  bookedAt?: string;
+  cancelledAt?: string;
 };
 
 export function todayLocalIsoDate(): string {
@@ -42,6 +49,16 @@ export async function appendBooking(booking: StoredBooking): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(all));
 }
 
+export async function cancelBookingById(bookingId: string): Promise<boolean> {
+  const all = await getAllBookings();
+  const idx = all.findIndex((b) => b.id === bookingId);
+  if (idx === -1) return false;
+  if (all[idx].cancelled) return true;
+  all[idx] = { ...all[idx], cancelled: true, cancelledAt: new Date().toISOString() };
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  return true;
+}
+
 export async function getBookedTimesForProviderOnDate(
   providerId: string,
   dateIso: string,
@@ -49,6 +66,7 @@ export async function getBookedTimesForProviderOnDate(
   const all = await getAllBookings();
   const taken = new Set<string>();
   for (const b of all) {
+    if (b.cancelled) continue;
     if (b.providerId === providerId && b.date === dateIso) taken.add(b.time);
   }
   return taken;
